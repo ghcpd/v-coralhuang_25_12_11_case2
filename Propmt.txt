@@ -1,0 +1,107 @@
+You are operating inside a real Python project that contains production code under the `src/` directory and an initially empty `tests/` directory. The `src` folder is automatically added to PYTHONPATH during test execution, so imports such as:
+
+  from router.model_router import ModelRouter
+  from models.fallback_policy import FallbackPolicy
+  from infra.circuit_breaker import CircuitBreaker
+
+are valid and correspond to real, already-implemented Python modules.
+
+Your task is to analyze the provided input file, which describes:
+- a model serving system,
+- its fallback logic,
+- the existing code layout under `src/`,
+- gaps in test coverage,
+- and a real production incident caused by incorrect fallback behavior.
+
+You must produce a complete, execution-ready output consisting of:
+
+============================================================
+1. **List of Uncovered Fallback Paths**
+============================================================
+For each uncovered branch:
+- specify the file name,
+- class/method,
+- the exact condition,
+- and a brief risk explanation.
+- Mark any branch directly tied to the production incident.
+
+This list must correspond exactly to real conditions that appear in the actual `src/` code.
+
+============================================================
+2. **Test Scenario Design Document**
+============================================================
+Organize use cases by scenario type, such as:
+- primary model timeout,
+- primary model generic exceptions,
+- circuit breaker open transitions,
+- tenant policy conditions (force_lite, blacklist_backup, strict SL).
+
+For each scenario provide 1–3 detailed test cases including:
+- Preconditions,
+- How the failure will be simulated using mocking or monkeypatching,
+- Expected fallback model chosen (primary / backup / lite),
+- Expected model client interactions (which `.infer()` is called or NOT called).
+
+This section is used to verify that you understand the system before producing runnable tests.
+
+============================================================
+3. **Runnable Pytest Test Code**
+============================================================
+Produce *real*, syntactically valid Python test files intended to be placed under:
+
+  tests/
+
+The tests MUST:
+
+- import the real production modules under `src/`,
+- use pytest,
+- use monkeypatch or mock to simulate:
+  - TimeoutError raised by the primary model,
+  - generic exceptions,
+  - circuit breaker open states,
+- assert which model client was called,
+- assert that other model clients were NOT called when relevant.
+
+The tests should run successfully in a standard environment:
+
+  pytest -q
+
+Tests must not rely on any undefined modules.  
+Tests must not modify production code.
+
+Provide at least 3 such test functions.
+
+============================================================
+4. **README for Test Execution**
+============================================================
+Produce a README section that includes:
+
+- How to install dependencies (only pytest is required),
+- How to run tests (`pytest -q`),
+- How the directory structure is expected to look (with `src` and `tests`),
+- Notes on how the fallback logic is validated,
+- Notes about mocking strategies used in tests.
+
+The README must be clear enough that a CI agent or a human developer can run the tests without interpretation.
+
+============================================================
+5. **Prioritization and Delivery Plan**
+============================================================
+Provide a backlog-ready TODO list that can be directly added to a sprint board.
+
+For each TODO item include:
+- file + branch to cover,
+- test type required (unit/integration),
+- expected outcome,
+- risk classification (High/Medium/Low).
+
+Ensure that fallback branches causing the real incident are marked **High Priority**.
+
+============================================================
+Important Rules
+============================================================
+- Your entire output MUST be grounded strictly in the provided input file and the real code under `src/`.
+- Do NOT invent new production modules or change any existing production logic.
+- All pytest examples MUST be runnable with minimal or zero changes.
+- All reasoning must be explicit, structured, and technically sound.
+- Tests must assume the runner executes them from the project root and that `src/` is importable.
