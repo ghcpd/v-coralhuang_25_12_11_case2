@@ -1,0 +1,542 @@
+User: You are operating inside a real Python project that contains production code under the `src/` directory and an initially empty `tests/` directory. The `src` folder is automatically added to PYTHONPATH during test execution, so imports such as:
+
+  from router.model_router import ModelRouter
+  from models.fallback_policy import FallbackPolicy
+  from infra.circuit_breaker import CircuitBreaker
+
+are valid and correspond to real, already-implemented Python modules.
+
+Your task is to analyze the provided input file, which describes:
+- a model serving system,
+- its fallback logic,
+- the existing code layout under `src/`,
+- gaps in test coverage,
+- and a real production incident caused by incorrect fallback behavior.
+
+You must produce a complete, execution-ready output consisting of:
+
+============================================================
+1. **List of Uncovered Fallback Paths**
+============================================================
+For each uncovered branch:
+- specify the file name,
+- class/method,
+- the exact condition,
+- and a brief risk explanation.
+- Mark any branch directly tied to the production incident.
+
+This list must correspond exactly to real conditions that appear in the actual `src/` code.
+
+============================================================
+2. **Test Scenario Design Document**
+============================================================
+Organize use cases by scenario type, such as:
+- primary model timeout,
+- primary model generic exceptions,
+- circuit breaker open transitions,
+- tenant policy conditions (force_lite, blacklist_backup, strict SL).
+
+For each scenario provide 1–3 detailed test cases including:
+- Preconditions,
+- How the failure will be simulated using mocking or monkeypatching,
+- Expected fallback model chosen (primary / backup / lite),
+- Expected model client interactions (which `.infer()` is called or NOT called).
+
+This section is used to verify that you understand the system before producing runnable tests.
+
+============================================================
+3. **Runnable Pytest Test Code**
+============================================================
+Produce *real*, syntactically valid Python test files intended to be placed under:
+
+  tests/
+
+The tests MUST:
+
+- import the real production modules under `src/`,
+- use pytest,
+- use monkeypatch or mock to simulate:
+  - TimeoutError raised by the primary model,
+  - generic exceptions,
+  - circuit breaker open states,
+- assert which model client was called,
+- assert that other model clients were NOT called when relevant.
+
+The tests should run successfully in a standard environment:
+
+  pytest -q
+
+Tests must not rely on any undefined modules.  
+Tests must not modify production code.
+
+Provide at least 3 such test functions.
+
+============================================================
+4. **README for Test Execution**
+============================================================
+Produce a README section that includes:
+
+- How to install dependencies (only pytest is required),
+- How to run tests (`pytest -q`),
+- How the directory structure is expected to look (with `src` and `tests`),
+- Notes on how the fallback logic is validated,
+- Notes about mocking strategies used in tests.
+
+The README must be clear enough that a CI agent or a human developer can run the tests without interpretation.
+
+============================================================
+5. **Prioritization and Delivery Plan**
+============================================================
+Provide a backlog-ready TODO list that can be directly added to a sprint board.
+
+For each TODO item include:
+- file + branch to cover,
+- test type required (unit/integration),
+- expected outcome,
+- risk classification (High/Medium/Low).
+
+Ensure that fallback branches causing the real incident are marked **High Priority**.
+
+============================================================
+Important Rules
+============================================================
+- Your entire output MUST be grounded strictly in the provided input file and the real code under `src/`.
+- Do NOT invent new production modules or change any existing production logic.
+- All pytest examples MUST be runnable with minimal or zero changes.
+- All reasoning must be explicit, structured, and technically sound.
+- Tests must assume the runner executes them from the project root and that `src/` is importable.
+
+
+GitHub Copilot: Read [](file:///c%3A/Bug_Bash/25_12_11/v-coralhuang_25_12_11_case2/src/router/model_router.py)
+
+Read [](file:///c%3A/Bug_Bash/25_12_11/v-coralhuang_25_12_11_case2/src/models/fallback_policy.py)
+
+Read [](file:///c%3A/Bug_Bash/25_12_11/v-coralhuang_25_12_11_case2/src/infra/circuit_breaker.py)
+
+Read [](file:///c%3A/Bug_Bash/25_12_11/v-coralhuang_25_12_11_case2/src/models/primary_model_client.py)
+
+Read [](file:///c%3A/Bug_Bash/25_12_11/v-coralhuang_25_12_11_case2/src/models/backup_model_client.py)
+
+Read [](file:///c%3A/Bug_Bash/25_12_11/v-coralhuang_25_12_11_case2/src/models/lite_model_client.py)
+
+Read [](file:///c%3A/Bug_Bash/25_12_11/v-coralhuang_25_12_11_case2)
+
+Created [](file:///c%3A/Bug_Bash/25_12_11/v-coralhuang_25_12_11_case2/tests)
+
+Created [](file:///c%3A/Bug_Bash/25_12_11/v-coralhuang_25_12_11_case2/tests/test_model_router.py)
+
+Read [](file:///c%3A/Bug_Bash/25_12_11/v-coralhuang_25_12_11_case2/tests/test_model_router.py#150-150), lines 150 to 162
+
+Using "Replace String in File"
+
+
+```
+
+```
+
+
+Ran terminal command: python -m pytest tests/ -q
+
+Ran terminal command: set PYTHONPATH=src ; python -m pytest tests/ -q
+
+Ran terminal command: echo %cd% ; set PYTHONPATH=%cd%\src ; python -c "import sys; print(sys.path)" ; python -c "from router.model_router import ModelRouter; print('import ok')"
+
+Ran terminal command: python -c "import sys; sys.path.insert(0, 'src'); from router.model_router import ModelRouter; print('import ok')"
+
+Using "Replace String in File"
+
+
+```
+
+```
+
+
+Ran terminal command: python -m pytest tests/ -q
+
+Using "Replace String in File"
+
+Read [](file:///c%3A/Bug_Bash/25_12_11/v-coralhuang_25_12_11_case2/tests/test_model_router.py#150-150), lines 150 to 164
+
+Using "Replace String in File"
+
+Using "Replace String in File"
+
+
+```
+
+```
+
+
+Ran terminal command: python -m pytest tests/ -q
+
+============================================================
+1. **List of Uncovered Fallback Paths**
+============================================================
+
+Based on the analysis of model_router.py, the following branches in the `ModelRouter.infer` method are currently uncovered by tests. Each corresponds to specific conditions that determine fallback behavior:
+
+- **File:** model_router.py, **Class:** `ModelRouter`, **Method:** `infer`, **Condition:** `if self.fallback_policy.force_lite(tenant_id)`
+  - **Risk Explanation:** Requests for tenants in `tenants_force_lite` bypass primary and backup models entirely, routing directly to the lite model. If the lite model fails, there is no further fallback mechanism, potentially leading to service degradation without alternatives.
+
+- **File:** model_router.py, **Class:** `ModelRouter`, **Method:** `infer`, **Condition:** `if self.circuit_breaker.allow_request()`
+  - **Risk Explanation:** When the circuit breaker is open, this condition prevents attempting the primary model, skipping to backup/lite decisions. This could mask underlying primary model issues if the breaker opens prematurely.
+
+- **File:** model_router.py, **Class:** `ModelRouter`, **Method:** `infer`, **Condition:** `except TimeoutError: ... if self.fallback_policy.allow_backup_on_timeout(tenant_id)`
+  - **Risk Explanation:** On primary model timeout, if backup is allowed, routes to backup. However, if backup also fails, no further fallback occurs, risking prolonged timeouts.
+  - **High Priority:** Directly tied to the production incident. For tenants in `tenants_strict_sl`, this branch incorrectly allows backup usage on timeouts (since `allow_backup_on_timeout` does not check `tenants_strict_sl`), violating strict service level policies.
+
+- **File:** model_router.py, **Class:** `ModelRouter`, **Method:** `infer`, **Condition:** `except TimeoutError: ... else (not allow_backup_on_timeout)`
+  - **Risk Explanation:** On primary timeout, if backup is not allowed, routes to lite. Ensures degradation but may not meet performance expectations for non-strict tenants.
+
+- **File:** model_router.py, **Class:** `ModelRouter`, **Method:** `infer`, **Condition:** `except Exception: ... if self.fallback_policy.allow_backup_on_error(tenant_id)`
+  - **Risk Explanation:** On generic primary exceptions, routes to backup if allowed. Similar timeout risk if backup fails.
+  - **High Priority:** Directly tied to the production incident. Same issue as timeout branch for `tenants_strict_sl` tenants.
+
+- **File:** model_router.py, **Class:** `ModelRouter`, **Method:** `infer`, **Condition:** `except Exception: ... else (not allow_backup_on_error)`
+  - **Risk Explanation:** On generic exceptions, routes to lite if backup not allowed. Provides safety but may hide specific error types.
+
+- **File:** model_router.py, **Class:** `ModelRouter`, **Method:** `infer`, **Condition:** `if self.fallback_policy.use_backup_when_open(tenant_id) and self.circuit_breaker.is_open()`
+  - **Risk Explanation:** When circuit breaker is open, routes to backup if policy allows. Useful for recovery but depends on backup reliability.
+
+- **File:** model_router.py, **Class:** `ModelRouter`, **Method:** `infer`, **Condition:** `if self.circuit_breaker.is_open()`
+  - **Risk Explanation:** When breaker is open and backup not allowed (e.g., for strict SL tenants), routes to lite. Ensures service continuity but at reduced quality.
+
+- **File:** model_router.py, **Class:** `ModelRouter`, **Method:** `infer`, **Condition:** `return self.lite.infer(request)` (safety net)
+  - **Risk Explanation:** Catches any edge cases not covered by above logic, degrading to lite. Prevents total failure but indicates potential logic gaps.
+
+============================================================
+2. **Test Scenario Design Document**
+============================================================
+
+**Primary Model Timeout Scenarios:**
+- **Test Case 1:** Normal tenant with backup allowed on timeout.
+  - Preconditions: Tenant not in `tenants_force_lite`, circuit breaker closed, `enable_backup=True`, tenant not in `blacklist_backup`, tenant not in `tenants_strict_sl`.
+  - Simulation: Monkeypatch `primary.infer` to raise `TimeoutError`.
+  - Expected Fallback: Backup model chosen.
+  - Expected Interactions: `primary.infer` called and raises; `backup.infer` called; `lite.infer` not called.
+- **Test Case 2:** Tenant blacklisted for backup on timeout.
+  - Preconditions: Tenant not in `tenants_force_lite`, circuit breaker closed, `enable_backup=True`, tenant in `blacklist_backup`.
+  - Simulation: `TimeoutError` from primary.
+  - Expected Fallback: Lite model chosen.
+  - Expected Interactions: `primary.infer` called; `backup.infer` not called; `lite.infer` called.
+- **Test Case 3:** Strict SL tenant on timeout.
+  - Preconditions: Tenant not in `tenants_force_lite`, circuit breaker closed, `enable_backup=True`, tenant not in `blacklist_backup`, tenant in `tenants_strict_sl`.
+  - Simulation: `TimeoutError` from primary.
+  - Expected Fallback: Currently backup (due to bug in `allow_backup_on_timeout` not checking `tenants_strict_sl`); should be lite per policy.
+  - Expected Interactions: `primary.infer` called; `backup.infer` called (bug); `lite.infer` not called.
+
+**Primary Model Generic Exceptions Scenarios:**
+- **Test Case 1:** Normal tenant with backup allowed on generic exception.
+  - Preconditions: Similar to timeout case 1.
+  - Simulation: Monkeypatch `primary.infer` to raise generic `Exception`.
+  - Expected Fallback: Backup model chosen.
+  - Expected Interactions: `primary.infer` called; `backup.infer` called; `lite.infer` not called.
+- **Test Case 2:** Tenant blacklisted for backup on exception.
+  - Preconditions: Similar to timeout case 2.
+  - Simulation: Generic `Exception` from primary.
+  - Expected Fallback: Lite model chosen.
+  - Expected Interactions: `primary.infer` called; `backup.infer` not called; `lite.infer` called.
+- **Test Case 3:** Strict SL tenant on generic exception.
+  - Preconditions: Similar to timeout case 3.
+  - Simulation: Generic `Exception` from primary.
+  - Expected Fallback: Currently backup (same bug); should be lite.
+  - Expected Interactions: `primary.infer` called; `backup.infer` called (bug); `lite.infer` not called.
+
+**Circuit Breaker Open Transitions Scenarios:**
+- **Test Case 1:** Breaker opens, tenant allows backup when open.
+  - Preconditions: Circuit breaker has accumulated failures to open, tenant not in `tenants_strict_sl`, `enable_backup=True`.
+  - Simulation: No failure in test request, but breaker pre-opened.
+  - Expected Fallback: Backup model chosen.
+  - Expected Interactions: `primary.infer` not called; `backup.infer` called; `lite.infer` not called.
+- **Test Case 2:** Breaker opens, strict SL tenant.
+  - Preconditions: Breaker pre-opened, tenant in `tenants_strict_sl`.
+  - Simulation: None additional.
+  - Expected Fallback: Lite model chosen.
+  - Expected Interactions: `primary.infer` not called; `backup.infer` not called; `lite.infer` called.
+- **Test Case 3:** Breaker transitions to open during request.
+  - Preconditions: Breaker at failure threshold -1, tenant allows backup.
+  - Simulation: `TimeoutError` from primary, triggering open.
+  - Expected Fallback: Backup model chosen.
+  - Expected Interactions: `primary.infer` called; `backup.infer` called; `lite.infer` not called.
+
+**Tenant Policy Conditions Scenarios:**
+- **Test Case 1:** Force lite tenant.
+  - Preconditions: Tenant in `tenants_force_lite`.
+  - Simulation: None.
+  - Expected Fallback: Lite model always.
+  - Expected Interactions: `primary.infer` not called; `backup.infer` not called; `lite.infer` called.
+- **Test Case 2:** Blacklist backup tenant on failure.
+  - Preconditions: Tenant in `blacklist_backup`, failure occurs.
+  - Simulation: `TimeoutError` or `Exception`.
+  - Expected Fallback: Lite model.
+  - Expected Interactions: `primary.infer` called; `backup.infer` not called; `lite.infer` called.
+- **Test Case 3:** Strict SL tenant on failure (bug demonstration).
+  - Preconditions: Tenant in `tenants_strict_sl`, failure occurs.
+  - Simulation: `TimeoutError`.
+  - Expected Fallback: Currently backup (bug); policy intends lite.
+  - Expected Interactions: `primary.infer` called; `backup.infer` called (bug); `lite.infer` not called.
+
+============================================================
+3. **Runnable Pytest Test Code**
+============================================================
+
+The following test file is placed under test_model_router.py:
+
+```python
+import sys
+sys.path.insert(0, 'src')
+
+import pytest
+from unittest.mock import Mock, patch
+from router.model_router import ModelRouter
+
+
+class TestModelRouterFallback:
+
+    @patch('models.lite_model_client.LiteModelClient.infer')
+    @patch('models.backup_model_client.BackupModelClient.infer')
+    @patch('models.primary_model_client.PrimaryModelClient.infer')
+    def test_force_lite_policy(self, primary_mock, backup_mock, lite_mock):
+        """Test that force_lite tenants always use lite model."""
+        lite_mock.return_value = {'model': 'lite'}
+
+        config = Mock()
+        config.tenants_force_lite = {'tenant_force'}
+        config.primary_endpoint = 'primary'
+        config.backup_endpoint = 'backup'
+        config.lite_endpoint = 'lite'
+        config.enable_backup = True
+        config.blacklist_backup = set()
+        config.tenants_strict_sl = set()
+
+        router = ModelRouter(config)
+        result = router.infer('request', 'tenant_force')
+
+        primary_mock.assert_not_called()
+        backup_mock.assert_not_called()
+        lite_mock.assert_called_once_with('request')
+        assert result['model'] == 'lite'
+
+    @patch('models.lite_model_client.LiteModelClient.infer')
+    @patch('models.backup_model_client.BackupModelClient.infer')
+    @patch('models.primary_model_client.PrimaryModelClient.infer')
+    def test_primary_timeout_backup_allowed(self, primary_mock, backup_mock, lite_mock):
+        """Test timeout with backup allowed."""
+        primary_mock.side_effect = TimeoutError
+        backup_mock.return_value = {'model': 'backup'}
+
+        config = Mock()
+        config.tenants_force_lite = set()
+        config.primary_endpoint = 'primary'
+        config.backup_endpoint = 'backup'
+        config.lite_endpoint = 'lite'
+        config.enable_backup = True
+        config.blacklist_backup = set()
+        config.tenants_strict_sl = set()
+
+        router = ModelRouter(config)
+        result = router.infer('request', 'tenant_normal')
+
+        primary_mock.assert_called_once_with('request')
+        backup_mock.assert_called_once_with('request')
+        lite_mock.assert_not_called()
+        assert result['model'] == 'backup'
+
+    @patch('models.lite_model_client.LiteModelClient.infer')
+    @patch('models.backup_model_client.BackupModelClient.infer')
+    @patch('models.primary_model_client.PrimaryModelClient.infer')
+    def test_primary_timeout_backup_blacklisted(self, primary_mock, backup_mock, lite_mock):
+        """Test timeout with backup blacklisted."""
+        primary_mock.side_effect = TimeoutError
+        lite_mock.return_value = {'model': 'lite'}
+
+        config = Mock()
+        config.tenants_force_lite = set()
+        config.primary_endpoint = 'primary'
+        config.backup_endpoint = 'backup'
+        config.lite_endpoint = 'lite'
+        config.enable_backup = True
+        config.blacklist_backup = {'tenant_black'}
+        config.tenants_strict_sl = set()
+
+        router = ModelRouter(config)
+        result = router.infer('request', 'tenant_black')
+
+        primary_mock.assert_called_once_with('request')
+        backup_mock.assert_not_called()
+        lite_mock.assert_called_once_with('request')
+        assert result['model'] == 'lite'
+
+    @patch('models.lite_model_client.LiteModelClient.infer')
+    @patch('models.backup_model_client.BackupModelClient.infer')
+    @patch('models.primary_model_client.PrimaryModelClient.infer')
+    def test_primary_generic_exception_backup_allowed(self, primary_mock, backup_mock, lite_mock):
+        """Test generic exception with backup allowed."""
+        primary_mock.side_effect = Exception("generic error")
+        backup_mock.return_value = {'model': 'backup'}
+
+        config = Mock()
+        config.tenants_force_lite = set()
+        config.primary_endpoint = 'primary'
+        config.backup_endpoint = 'backup'
+        config.lite_endpoint = 'lite'
+        config.enable_backup = True
+        config.blacklist_backup = set()
+        config.tenants_strict_sl = set()
+
+        router = ModelRouter(config)
+        result = router.infer('request', 'tenant_normal')
+
+        primary_mock.assert_called_once_with('request')
+        backup_mock.assert_called_once_with('request')
+        lite_mock.assert_not_called()
+        assert result['model'] == 'backup'
+
+    @patch('models.lite_model_client.LiteModelClient.infer')
+    @patch('models.backup_model_client.BackupModelClient.infer')
+    @patch('models.primary_model_client.PrimaryModelClient.infer')
+    def test_circuit_breaker_open_backup_allowed(self, primary_mock, backup_mock, lite_mock):
+        """Test when circuit breaker is open and backup allowed."""
+        backup_mock.return_value = {'model': 'backup'}
+
+        config = Mock()
+        config.tenants_force_lite = set()
+        config.primary_endpoint = 'primary'
+        config.backup_endpoint = 'backup'
+        config.lite_endpoint = 'lite'
+        config.enable_backup = True
+        config.blacklist_backup = set()
+        config.tenants_strict_sl = set()
+
+        router = ModelRouter(config)
+        # Open the breaker
+        for _ in range(3):
+            router.circuit_breaker.record_failure()
+
+        result = router.infer('request', 'tenant_normal')
+
+        primary_mock.assert_not_called()
+        backup_mock.assert_called_once_with('request')
+        lite_mock.assert_not_called()
+        assert result['model'] == 'backup'
+
+    @patch('models.lite_model_client.LiteModelClient.infer')
+    @patch('models.backup_model_client.BackupModelClient.infer')
+    @patch('models.primary_model_client.PrimaryModelClient.infer')
+    def test_circuit_breaker_open_strict_sl(self, primary_mock, backup_mock, lite_mock):
+        """Test when circuit breaker is open for strict SL tenant."""
+        lite_mock.return_value = {'model': 'lite'}
+
+        config = Mock()
+        config.tenants_force_lite = set()
+        config.primary_endpoint = 'primary'
+        config.backup_endpoint = 'backup'
+        config.lite_endpoint = 'lite'
+        config.enable_backup = True
+        config.blacklist_backup = set()
+        config.tenants_strict_sl = {'tenant_strict'}
+
+        router = ModelRouter(config)
+        # Open the breaker
+        for _ in range(3):
+            router.circuit_breaker.record_failure()
+
+        result = router.infer('request', 'tenant_strict')
+
+        primary_mock.assert_not_called()
+        backup_mock.assert_not_called()
+        lite_mock.assert_called_once_with('request')
+        assert result['model'] == 'lite'
+
+    @patch('models.lite_model_client.LiteModelClient.infer')
+    @patch('models.backup_model_client.BackupModelClient.infer')
+    @patch('models.primary_model_client.PrimaryModelClient.infer')
+    def test_primary_timeout_strict_sl_uses_backup_bug(self, primary_mock, backup_mock, lite_mock):
+        """Test timeout for strict SL tenant - currently uses backup due to bug."""
+        primary_mock.side_effect = TimeoutError
+        backup_mock.return_value = {'model': 'backup'}
+
+        config = Mock()
+        config.tenants_force_lite = set()
+        config.primary_endpoint = 'primary'
+        config.backup_endpoint = 'backup'
+        config.lite_endpoint = 'lite'
+        config.enable_backup = True
+        config.blacklist_backup = set()
+        config.tenants_strict_sl = {'tenant_strict'}
+
+        router = ModelRouter(config)
+        result = router.infer('request', 'tenant_strict')
+
+        primary_mock.assert_called_once_with('request')
+        backup_mock.assert_called_once_with('request')
+        lite_mock.assert_not_called()
+        assert result['model'] == 'backup'  # This is the bug - should be lite for strict SL
+```
+
+============================================================
+4. **README for Test Execution**
+============================================================
+
+## Model Router Fallback Tests
+
+This directory contains pytest-based tests for the fallback logic in `ModelRouter`.
+
+### Dependencies
+- Python 3.x
+- pytest (install with `pip install pytest`)
+
+### Directory Structure
+```
+project_root/
+├── src/
+│   ├── router/
+│   │   └── model_router.py
+│   ├── models/
+│   │   ├── primary_model_client.py
+│   │   ├── backup_model_client.py
+│   │   ├── lite_model_client.py
+│   │   └── fallback_policy.py
+│   └── infra/
+│       └── circuit_breaker.py
+└── tests/
+    └── test_model_router.py
+```
+
+### Running Tests
+Execute from the project root:
+```
+pytest -q
+```
+
+This runs all tests quietly. The src directory is added to PYTHONPATH automatically via `sys.path.insert(0, 'src')` in the test file.
+
+### Fallback Logic Validation
+The tests validate the routing decisions based on:
+- Tenant policies (`force_lite`, `blacklist_backup`, `strict_sl`)
+- Circuit breaker state (open/closed)
+- Primary model failures (timeouts vs. generic exceptions)
+
+Mocking is used to simulate failures without real network calls. Assertions check which model client's `infer` method is called (or not called) to ensure correct fallback paths.
+
+### Mocking Strategy
+- `@patch` decorators mock the `infer` methods of model clients.
+- `Mock` objects simulate config with required attributes.
+- Circuit breaker state is manipulated by calling `record_failure` to trigger opens.
+- Primary failures are simulated by setting `side_effect` on the mock.
+
+============================================================
+5. **Prioritization and Delivery Plan**
+============================================================
+
+- **File:** model_router.py, **Branch:** `except TimeoutError: if allow_backup_on_timeout`, **Test Type:** Unit/Integration, **Expected Outcome:** Test passes (but reveals bug for strict SL), **Risk Classification:** High Priority (tied to production incident - strict SL tenants incorrectly use backup on timeouts).
+- **File:** model_router.py, **Branch:** `except Exception: if allow_backup_on_error`, **Test Type:** Unit/Integration, **Expected Outcome:** Test passes (but reveals bug for strict SL), **Risk Classification:** High Priority (tied to production incident - strict SL tenants incorrectly use backup on exceptions).
+- **File:** model_router.py, **Branch:** `if force_lite`, **Test Type:** Unit, **Expected Outcome:** Test passes, **Risk Classification:** Medium (bypasses primary, potential single point of failure).
+- **File:** model_router.py, **Branch:** `if allow_request`, **Test Type:** Unit, **Expected Outcome:** Test passes, **Risk Classification:** Medium (breaker open skips primary attempts).
+- **File:** model_router.py, **Branch:** `except TimeoutError: else`, **Test Type:** Unit, **Expected Outcome:** Test passes, **Risk Classification:** Low (standard fallback to lite).
+- **File:** model_router.py, **Branch:** `except Exception: else`, **Test Type:** Unit, **Expected Outcome:** Test passes, **Risk Classification:** Low (standard fallback to lite).
+- **File:** model_router.py, **Branch:** `if use_backup_when_open and is_open`, **Test Type:** Unit, **Expected Outcome:** Test passes, **Risk Classification:** Medium (recovery path when breaker open).
+- **File:** model_router.py, **Branch:** `if is_open`, **Test Type:** Unit, **Expected Outcome:** Test passes, **Risk Classification:** Low (degrades to lite for strict SL when open).
+- **File:** model_router.py, **Branch:** safety net return, **Test Type:** Unit, **Expected Outcome:** Not reachable in current logic, **Risk Classification:** Low (dead code, but safe).
+
+Made changes.
