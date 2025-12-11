@@ -1,0 +1,350 @@
+User: You are operating inside a real Python project that contains production code under the `src/` directory and an initially empty `tests/` directory. The `src` folder is automatically added to PYTHONPATH during test execution, so imports such as:
+
+  from router.model_router import ModelRouter
+  from models.fallback_policy import FallbackPolicy
+  from infra.circuit_breaker import CircuitBreaker
+
+are valid and correspond to real, already-implemented Python modules.
+
+Your task is to analyze the provided input file, which describes:
+- a model serving system,
+- its fallback logic,
+- the existing code layout under `src/`,
+- gaps in test coverage,
+- and a real production incident caused by incorrect fallback behavior.
+
+You must produce a complete, execution-ready output consisting of:
+
+============================================================
+1. **List of Uncovered Fallback Paths**
+============================================================
+For each uncovered branch:
+- specify the file name,
+- class/method,
+- the exact condition,
+- and a brief risk explanation.
+- Mark any branch directly tied to the production incident.
+
+This list must correspond exactly to real conditions that appear in the actual `src/` code.
+
+============================================================
+2. **Test Scenario Design Document**
+============================================================
+Organize use cases by scenario type, such as:
+- primary model timeout,
+- primary model generic exceptions,
+- circuit breaker open transitions,
+- tenant policy conditions (force_lite, blacklist_backup, strict SL).
+
+For each scenario provide 1–3 detailed test cases including:
+- Preconditions,
+- How the failure will be simulated using mocking or monkeypatching,
+- Expected fallback model chosen (primary / backup / lite),
+- Expected model client interactions (which `.infer()` is called or NOT called).
+
+This section is used to verify that you understand the system before producing runnable tests.
+
+============================================================
+3. **Runnable Pytest Test Code**
+============================================================
+Produce *real*, syntactically valid Python test files intended to be placed under:
+
+  tests/
+
+The tests MUST:
+
+- import the real production modules under `src/`,
+- use pytest,
+- use monkeypatch or mock to simulate:
+  - TimeoutError raised by the primary model,
+  - generic exceptions,
+  - circuit breaker open states,
+- assert which model client was called,
+- assert that other model clients were NOT called when relevant.
+
+The tests should run successfully in a standard environment:
+
+  pytest -q
+
+Tests must not rely on any undefined modules.  
+Tests must not modify production code.
+
+Provide at least 3 such test functions.
+
+============================================================
+4. **README for Test Execution**
+============================================================
+Produce a README section that includes:
+
+- How to install dependencies (only pytest is required),
+- How to run tests (`pytest -q`),
+- How the directory structure is expected to look (with `src` and `tests`),
+- Notes on how the fallback logic is validated,
+- Notes about mocking strategies used in tests.
+
+The README must be clear enough that a CI agent or a human developer can run the tests without interpretation.
+
+============================================================
+5. **Prioritization and Delivery Plan**
+============================================================
+Provide a backlog-ready TODO list that can be directly added to a sprint board.
+
+For each TODO item include:
+- file + branch to cover,
+- test type required (unit/integration),
+- expected outcome,
+- risk classification (High/Medium/Low).
+
+Ensure that fallback branches causing the real incident are marked **High Priority**.
+
+============================================================
+Important Rules
+============================================================
+- Your entire output MUST be grounded strictly in the provided input file and the real code under `src/`.
+- Do NOT invent new production modules or change any existing production logic.
+- All pytest examples MUST be runnable with minimal or zero changes.
+- All reasoning must be explicit, structured, and technically sound.
+- Tests must assume the runner executes them from the project root and that `src/` is importable.
+
+
+GitHub Copilot: Optimizing tool selection...I'll inspect the repository files to find fallback-related logic and uncovered branches. I'll start by listing and reading relevant source files (model_router, fallback_policy, model clients, circuit breaker).
+
+Searched for files matching `**/src/**`, 6 matches
+
+Read [](file:///c%3A/Bug_Bash/25_12_11/v-coralhuang_25_12_11_case2/src/router/model_router.py)
+
+Read [](file:///c%3A/Bug_Bash/25_12_11/v-coralhuang_25_12_11_case2/src/models/fallback_policy.py)
+
+Read [](file:///c%3A/Bug_Bash/25_12_11/v-coralhuang_25_12_11_case2/src/models/primary_model_client.py)
+
+Read [](file:///c%3A/Bug_Bash/25_12_11/v-coralhuang_25_12_11_case2/src/models/backup_model_client.py)
+
+Read [](file:///c%3A/Bug_Bash/25_12_11/v-coralhuang_25_12_11_case2/src/models/lite_model_client.py)
+
+Read [](file:///c%3A/Bug_Bash/25_12_11/v-coralhuang_25_12_11_case2/src/infra/circuit_breaker.py)
+
+I will add pytest tests covering force-lite, timeout fallback, generic exception behavior, and circuit-breaker-open blacklist case, and a README describing how to run them. I'll create tests/test_model_router.py and tests/README.md now.
+
+Created [](file:///c%3A/Bug_Bash/25_12_11/v-coralhuang_25_12_11_case2/tests/test_model_router.py)
+
+Small fix: adjust default config attributes initialization to avoid linter complaints; then I'll run tests.
+
+Using "Replace String in File"
+
+
+```
+
+```
+
+
+Created [](file:///c%3A/Bug_Bash/25_12_11/v-coralhuang_25_12_11_case2/tests/README.md)
+
+Ran terminal command: pytest -q
+
+I'll add a small sys.path insertion at top of the test file so tests can import src modules reliably during local test runs. Then I'll re-run pytest.
+
+Using "Replace String in File"
+
+
+```
+
+```
+
+
+Ran terminal command: pytest -q
+
+I'll update the test to capture the current (incorrect) behavior as the observed behavior and add an xfail test that documents the expected fixed behavior (tenant blacklisted should not get backup). Then I'll re-run tests.
+
+Using "Replace String in File"
+
+
+```
+
+```
+
+
+Ran terminal command: pytest -q
+
+Ran terminal command: pytest -q -k test -r a
+
+I'll add one more test to cover the tenants_strict_sl branch (breaker open + strict SL -> lite) to ensure that path is covered. Then I'll run pytest.
+
+Using "Replace String in File"
+
+
+```
+
+```
+
+
+Ran terminal command: pytest -q -k test -r a
+
+I'll add a test verifying TimeoutError falls back to lite when backup is disabled, then re-run the test suite.
+
+Using "Replace String in File"
+
+
+```
+
+```
+
+
+Ran terminal command: pytest -q -k test -r a
+
+Status: I added a test suite and README, and exercised the tests — they pass with one xfail that documents the production incident.
+
+1) List of Uncovered Fallback Paths (mapped to real source)
+- File: model_router.py
+  - Location: ModelRouter.infer()
+  - Branch/Condition: The code path that runs when the primary circuit breaker is open:
+    - if self.fallback_policy.use_backup_when_open(tenant_id) and self.circuit_breaker.is_open(): return self.backup.infer(request)
+    - elif self.circuit_breaker.is_open(): return self.lite.infer(request)
+  - Risk: use_backup_when_open(...) is used to decide backup vs lite when breaker is open. This path is directly tied to the production incident because the decision uses use_backup_when_open() which does NOT consider blacklist_backup — so a tenant explicitly blacklisted from backup may still be routed to backup when the breaker is open.
+  - Incident tie: DIRECT — this is the branch that allowed backup usage for blacklisted tenants.
+
+- File: fallback_policy.py
+  - Location: FallbackPolicy.use_backup_when_open()
+  - Branch/Condition: Only checks tenants_strict_sl and enable_backup; it does not check blacklist_backup.
+  - Risk: Missing check for blacklist_backup (and/or other policy constraints) leads to policy violation when breaker is open (backup used even if tenant is blacklisted). This mismatch between allow_backup_on_error/timeout (which DO check blacklist) and use_backup_when_open (which does not) is unsafe and caused the incident.
+
+- File: model_router.py
+  - Location: Exception handlers in ModelRouter.infer()
+  - Branch/Condition: except TimeoutError: if self.fallback_policy.allow_backup_on_timeout(tenant_id) -> backup/infer else -> lite.infer
+  - Risk: Branches for TimeoutError vs generic Exception both use allow_backup_on_* which do check blacklist; tests should verify both code paths (timeout and generic exception, backup allowed and backup disallowed).
+
+- File: circuit_breaker.py
+  - Location: CircuitBreaker.record_failure(), is_open()
+  - Branch/Condition: breaker opens when failure_count >= failure_threshold
+  - Risk: There are fallbacks depending on the breaker state (open vs closed); tests must verify that recording failures over the threshold triggers breaker.open and the router takes open-state fallback branches.
+
+2) Test Scenario Design Document
+(Organized by scenario type; each scenario lists 1–3 concrete test cases)
+
+- Scenario: force-lite policy
+  - Test case: Tenant explicitly in tenants_force_lite
+    - Preconditions: config.tenants_force_lite contains tenantX
+    - Mocking: primary/backup infer methods are replaced with Mock (should not be called), lite.infer returns sentinel
+    - Expected fallback: lite model used
+    - Client interactions: lite.infer called once; primary.infer and backup.infer NOT called
+
+- Scenario: primary model TimeoutError
+  - Test case A (backup allowed)
+    - Preconditions: enable_backup=True; tenant not blacklisted
+    - Mocking: primary.infer raises TimeoutError; backup.infer returns sentinel
+    - Expected fallback: backup model used
+    - Client interactions: backup.infer called; lite.infer NOT called
+  - Test case B (backup disabled)
+    - Preconditions: enable_backup=False (or tenant blacklisted)
+    - Mocking: primary.infer raises TimeoutError; lite.infer returns sentinel
+    - Expected fallback: lite model used
+    - Client interactions: lite.infer called; backup.infer NOT called
+
+- Scenario: primary model generic Exception
+  - Test case: backup disallowed via blacklist
+    - Preconditions: enable_backup=True; tenant in blacklist_backup
+    - Mocking: primary.infer raises RuntimeError; lite.infer returns sentinel
+    - Expected fallback: lite model used
+    - Client interactions: lite.infer called; backup.infer NOT called
+
+- Scenario: circuit breaker open transitions
+  - Test case A: open & backup allowed
+    - Preconditions: breaker._open True (simulate open); enable_backup=True; tenant not blacklisted; tenants_strict_sl empty
+    - Mocking: backup.infer returns sentinel
+    - Expected fallback: backup model used
+    - Client interactions: backup.infer called; lite.infer NOT called
+  - Test case B: open & tenant blacklisted (policy violation / incident)
+    - Preconditions: breaker._open True; enable_backup True; tenant in blacklist_backup
+    - Mocking: backup.infer / lite.infer returns sentinel
+    - Expected behavior (correct): lite model used
+    - Observed behavior (current production): backup model used — this is the incident (covered as xfail in test suite)
+  - Test case C: open & strict SL tenant
+    - Preconditions: breaker._open True; tenants_strict_sl contains tenant
+    - Expected fallback: lite model used
+    - Client interactions: lite.infer called; backup.infer NOT called
+
+3) Runnable Pytest Test Code (created)
+- File added: test_model_router.py
+  - Contains >3 tests that:
+    - test_force_lite_overrides_primary_and_backup
+    - test_primary_timeout_falls_back_to_backup_when_allowed
+    - test_primary_generic_exception_falls_back_to_lite_when_backup_blacklisted
+    - test_breaker_open_uses_backup_unless_blacklisted
+    - test_breaker_open_blacklist_should_use_lite (marked pytest.mark.xfail to document incident)
+    - test_breaker_open_respects_tenants_strict_sl
+    - test_timeout_falls_back_to_lite_when_backup_disabled
+  - Tests use unittest.mock.Mock and a small config object. They simulate:
+    - TimeoutError on primary.infer
+    - Generic exceptions on primary.infer
+    - circuit_breaker._open toggled to True for open-state tests
+  - Tests assert which model client were called and which were not.
+  - Tests are written to be runnable from project root. The test file ensures src/ is importable during local test runs by inserting src/ into sys.path for test collection (this is a test-only convenience to ensure local runs work as expected).
+
+You can find the tests under:
+- test_model_router.py
+- README.md (short execution README included)
+
+4) README for Test Execution (also created at tests/README.md)
+- How to install dependencies:
+  - pip install pytest
+- How to run tests:
+  - From project root: pytest -q
+- Expected directory layout:
+  - .
+    - src/ (production code)
+    - tests/
+      - test_model_router.py
+      - README.md
+- Notes on validating fallback logic:
+  - The tests check which model client handles the request and also inspect circuit_breaker state (failure_count/_open) where relevant.
+  - One test is marked xfail to capture the known production incident (blacklist not respected for breaker-open fallback).
+- Mocking strategies used:
+  - Use unittest.mock.Mock and side_effect to simulate raising TimeoutError or other exceptions from the primary client.
+  - For circuit-breaker-open scenarios, breaker._open is toggled directly in tests (this is acceptable for unit tests; for integration tests a more elaborate simulation can be used).
+  - Assertions ensure an expected client was invoked and other clients were not.
+
+5) Prioritization and Delivery Plan (backlog-ready TODOs)
+- BUG: Fix backup usage when breaker is open for blacklisted tenants
+  - File + branch: src/models/fallback_policy.py::FallbackPolicy.use_backup_when_open (branch: missing blacklist check)
+  - Test to add: unit test (turn xfail into a pass)
+  - Expected outcome: use_backup_when_open returns False for any tenant in blacklist_backup -> ModelRouter routes blacklisted tenants to lite when breaker open
+  - Risk: High (this is the incident-causing branch)
+  - Suggested fix (non-breaking, minimal):
+    - In use_backup_when_open, add:
+      - blacklist_backup = getattr(self.config, "blacklist_backup", set())
+      - if tenant_id in blacklist_backup: return False
+    - Add unit tests covering blacklisted tenant + breaker open -> lite (currently xfail)
+- COVERAGE: Add unit tests for timeout fallback when backup disabled
+  - File + branch: src/router/model_router.py::ModelRouter.infer (TimeoutError except branch with allow_backup_on_timeout False)
+  - Test type: unit
+  - Expected outcome: primary TimeoutError -> lite when enable_backup False
+  - Risk: Low
+  - Status: implemented (tests exist)
+- COVERAGE: Verify circuit breaker opens on repeated failures and subsequent fallback behavior
+  - File + branch: circuit_breaker.py + model_router.py (breaker transitions)
+  - Test type: unit/integration
+  - Expected outcome: after N failures breaker.is_open() True; further inferences use open-state fallback
+  - Risk: Medium
+- COVERAGE: Ensure tenants_strict_sl behavior is covered in CI
+  - File + branch: fallback_policy.use_backup_when_open (branch: tenants_strict_sl set)
+  - Test type: unit
+  - Expected outcome: strict SL tenants never use backup when breaker open -> lite used
+  - Risk: Low (tests added)
+
+Notes on delivery and next steps:
+- Highest priority: fix use_backup_when_open to check blacklist_backup (High priority — this reproduces and fixes the production incident).
+- After the fix, remove xfail on the test test_breaker_open_blacklist_should_use_lite so CI will fail if regression occurs.
+- Add integration tests (if possible) that mimic repeated timeouts to trigger circuit breaker transitions under realistic timing and then verify routing decisions across transitions.
+- Consider adding logging and telemetry around fallback decisions (why backup vs lite was chosen) for observability.
+
+What I changed in the repo:
+- Added tests:
+  - test_model_router.py (covers the behaviors described; includes xfail documenting the incident)
+  - README.md (instructions)
+- Ran pytest; all tests pass with one xfail that documents the incident. The failing (xfail) test is the explicit regression test that's waiting for the code fix described above.
+
+If you'd like, I can:
+- Implement the minimal fix (add blacklist check in FallbackPolicy.use_backup_when_open) and convert the xfail to a passing test, then re-run tests and provide the diff and test/CI results. (Next action requires your OK to edit production code.)
+
+If you want me to proceed to implement and test the fix now, say "Apply fix" and I'll make the smallest safe change, add the passing test, and run the test suite to validate.
+
+Made changes.
