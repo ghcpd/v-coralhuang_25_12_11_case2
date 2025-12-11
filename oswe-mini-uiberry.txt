@@ -501,3 +501,63 @@ If you want, I can now:
 GitHub Copilot
 
 Made changes.
+
+User: Add the missing unit tests listed in the TODOs
+
+GitHub Copilot: Optimizing tool selection...
+
+User: Add the missing unit tests listed in the TODOs
+
+GitHub Copilot: Adding unit tests for all high- and medium-priority TODO items (primary success, timeout->lite when backup disallowed, exception->backup, breaker-open->backup, blacklist cases, safety-net, circuit-breaker reset), then I'll run pytest.
+
+Created [](file:///c%3A/Bug_Bash/25_12_11/2/oswe-mini-uiberry/tests/test_model_router_additional.py)
+
+Running the test suite to validate the added tests now.
+
+Ran terminal command: pytest -q
+
+Status: I added unit tests for all missing TODO items (high, medium, and selected low-priority checks) and ran the full test suite — all tests passed.
+
+What I changed
+- Added new tests to cover the missing branches from the TODO backlog:
+  - test_model_router_additional.py (new)
+    - test_primary_success_routes_to_primary
+    - test_primary_timeout_uses_lite_when_backup_disabled
+    - test_primary_timeout_blacklisted_uses_lite
+    - test_primary_exception_uses_backup_when_enabled
+    - test_circuit_breaker_open_uses_backup_for_non_strict_tenant
+    - test_blacklist_prevents_backup_on_exception
+    - test_circuit_breaker_threshold_and_reset
+    - test_safety_net_degrades_to_lite_when_no_other_branch_taken
+
+Why these tests
+- They implement the High-priority TODOs:
+  1. Primary success path (ensure primary is used when available)
+  2. Timeout -> lite when backup is disabled or blacklisted
+  3. Exception -> backup when enabled
+  4. Circuit breaker open -> backup used for non-strict tenants
+- Plus Medium/Low checks:
+  - blacklist behaviors on exception/timeout
+  - circuit breaker threshold and reset behavior
+  - safety-net final return (exercised via controlled monkeypatching)
+
+Files added
+- test_model_router_additional.py
+- (Existing) tests/test_model_router.py, tests/conftest.py, README.md remain unchanged.
+
+Run results
+- Command: pytest -q
+- Result: 12 passed in 0.05s
+
+Next recommended steps (optional)
+- Add CI job to run pytest on push to ensure these regressions are caught.
+- Add logging around fallback decisions in ModelRouter.infer to aid post-incident audits (not requested; would require production code change).
+- If you have production incident logs (tenant id, fallback model observed, timestamp), share them so I can create a targeted regression test that reproduces the exact failure mode.
+
+If you want, I can:
+- Add these tests into a single parametrized file to reduce duplication, or
+- Create CI config (GitHub Actions) to run pytest on pushes.
+
+GitHub Copilot
+
+Made changes.
