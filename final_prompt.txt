@@ -1,0 +1,20 @@
+You are operating inside a real Python project that contains production code under the `src/` directory and an initially empty `tests/` directory. The `src` folder is automatically added to PYTHONPATH during test execution, so imports such as:
+
+  from router.model_router import ModelRouter
+  from models.fallback_policy import FallbackPolicy
+  from infra.circuit_breaker import CircuitBreaker
+
+are valid and correspond to real, already-implemented Python modules.
+
+Your task is to analyze the provided input file, which describes:
+- a model serving system,
+- its fallback logic,
+- the existing code layout under `src/`,
+- gaps in test coverage,
+- and a real production incident caused by incorrect fallback behavior.
+
+You must produce a complete, execution-ready output consisting of:
+
+============================================================
+1. **List of Uncovered Fallback Paths**
+============================================================
